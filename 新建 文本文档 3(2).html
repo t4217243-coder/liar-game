@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>骗子酒馆 · 局域网双人</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #1a1e2a;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            color: #e8edf5;
+        }
+        .container {
+            max-width: 520px;
+            width: 100%;
+            background: #242a38;
+            border-radius: 32px;
+            padding: 1.6rem 1.4rem 2rem;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+            border: 1px solid #3a4155;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f5d98f, #e8b86d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .status-badge {
+            background: #2f3649;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #bcc6db;
+            border: 1px solid #414a62;
+        }
+        .status-badge.online {
+            border-color: #6fcf97;
+            color: #6fcf97;
+        }
+        .room-section {
+            background: #1e2332;
+            border-radius: 20px;
+            padding: 1rem 1.2rem;
+            margin: 0.6rem 0 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            align-items: center;
+            border: 1px solid #323b51;
+        }
+        .room-section input {
+            flex: 1;
+            min-width: 100px;
+            background: #11161f;
+            border: 1px solid #3a435b;
+            border-radius: 40px;
+            padding: 0.5rem 1rem;
+            color: #e8edf5;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .room-section input::placeholder {
+            color: #5e6a84;
+        }
+        .room-section input:focus {
+            border-color: #b8a06a;
+        }
+        .btn {
+            background: #3a425c;
+            border: none;
+            border-radius: 40px;
+            padding: 0.5rem 1.2rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #e8edf5;
+            cursor: pointer;
+            transition: 0.12s;
+            white-space: nowrap;
+            border: 1px solid transparent;
+        }
+        .btn:hover:not(:disabled) {
+            transform: scale(0.96);
+            background: #4a5372;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .btn-primary {
+            background: #b8a06a;
+            color: #1a1e2a;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #d0b87e;
+        }
+        .btn-danger {
+            background: #b15e4a;
+            color: #fff;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #c96e58;
+        }
+        .btn-sm {
+            padding: 0.3rem 0.9rem;
+            font-size: 0.75rem;
+        }
+        .game-area {
+            margin-top: 0.8rem;
+        }
+        .opponent-area {
+            background: #1a1f2d;
+            border-radius: 18px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.6rem;
+            border: 1px solid #2d3447;
+            min-height: 80px;
+        }
+        .opponent-label {
+            font-size: 0.7rem;
+            color: #7a87a5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .opponent-hand {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .card-slot {
+            width: 44px;
+            height: 64px;
+            background: #151b26;
+            border-radius: 8px;
+            border: 1.5px solid #2d3447;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #7a87a5;
+        }
+        .card-slot.facedown {
+            background: #2a3145;
+            border-color: #3f4a63;
+            color: #4e5a78;
+            font-size: 1.2rem;
+        }
+        .card-slot.revealed {
+            border-color: #b8a06a;
+            background: #2a2f42;
+            color: #e8edf5;
+        }
+        .card-slot.joker {
+            color: #d4a0d4;
+            border-color: #8a6a8a;
+        }
+        .my-area {
+            background: #1e2332;
+            border-radius: 18px;
+            padding: 0.8rem 1rem;
+            border: 1px solid #2d3447;
+            min-height: 120px;
+        }
+        .my-label {
+            font-size: 0.7rem;
+            color: #7a87a5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .my-hand {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .my-hand .card-slot {
+            cursor: pointer;
+            border-color: #3f4a63;
+            transition: 0.1s;
+            background: #1c2232;
+        }
+        .my-hand .card-slot:hover:not(.selected) {
+            border-color: #6a7a9a;
+            transform: translateY(-4px);
+        }
+        .my-hand .card-slot.selected {
+            border-color: #f5d98f;
+            box-shadow: 0 0 12px rgba(245, 217, 143, 0.25);
+            transform: translateY(-6px);
+            background: #2a3045;
+        }
+        .my-hand .card-slot.joker {
+            border-color: #8a6a8a;
+        }
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.8rem 0 0.4rem;
+            align-items: center;
+        }
+        .action-row .btn {
+            flex: 1;
+            min-width: 70px;
+            text-align: center;
+        }
+        .message-box {
+            background: #11161f;
+            border-radius: 16px;
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+            min-height: 2.8rem;
+            display: flex;
+            align-items: center;
+            color: #bcc6db;
+            border-left: 4px solid #b8a06a;
+            margin: 0.6rem 0 0.2rem;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+        .message-box.error {
+            border-left-color: #b15e4a;
+        }
+        .message-box.success {
+            border-left-color: #6fcf97;
+        }
+        .life-bar {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .life-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #3a425c;
+            border: 1px solid #4e5a78;
+        }
+        .life-dot.active {
+            background: #b8a06a;
+            border-color: #d0b87e;
+        }
+        .life-dot.lost {
+            background: #2a2f42;
+            border-color: #3a3f55;
+        }
+        .target-display {
+            background: #2a3145;
+            border-radius: 30px;
+            padding: 0.2rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #f5d98f;
+        }
+        .flex-row {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .mt-1 {
+            margin-top: 0.5rem;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .w-full {
+            width: 100%;
+        }
+        @media (max-width: 500px) {
+            .container {
+                padding: 1rem;
+            }
+            .card-slot {
+                width: 36px;
+                height: 52px;
+                font-size: 0.75rem;
+            }
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            .room-section {
+                flex-direction: column;
+            }
+            .room-section input {
+                width: 100%;
+            }
+            .action-row .btn {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔫 骗子酒馆</h1>
+            <span class="status-badge" id="connStatus">⚪ 未连接</span>
+        </div>
+
+        <div class="room-section">
+            <input type="text" id="roomInput" placeholder="房间号" value="liar666" />
+            <button class="btn btn-primary" id="createBtn">🎯 创建</button>
+            <button class="btn" id="joinBtn">🔗 加入</button>
+            <button class="btn btn-sm" id="disconnectBtn" style="background:#4a3a3a;">⛔ 断开</button>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="opponent-area">
+                <div class="opponent-label">
+                    <span>🕵️ 对手</span>
+                    <span class="life-bar" id="opponentLife"></span>
+                    <span id="opponentCardCount" style="font-size:0.7rem;color:#7a87a5;">0 张</span>
+                </div>
+                <div class="opponent-hand" id="opponentHand"></div>
+            </div>
+
+            <div class="text-center mt-1">
+                <span class="target-display" id="targetDisplay">🎯 目标: ?</span>
+            </div>
+
+            <div class="my-area">
+                <div class="my-label">
+                    <span>🧑‍💻 我</span>
+                    <span class="life-bar" id="myLife"></span>
+                    <span id="myCardCount" style="font-size:0.7rem;color:#7a87a5;">0 张</span>
+                </div>
+                <div class="my-hand" id="myHand"></div>
+                <div class="action-row">
+                    <button class="btn btn-primary" id="playBtn" disabled>🎴 打出 (0张)</button>
+                    <button class="btn" id="trustBtn" disabled>👍 相信</button>
+                    <button class="btn btn-danger" id="doubtBtn" disabled>🤨 质疑</button>
+                </div>
+            </div>
+
+            <div class="message-box" id="messageBox">💡 创建或加入房间开始游戏</div>
+            <div style="font-size:0.65rem;color:#4e5a78;margin-top:0.4rem;text-align:center;" id="debugInfo"></div>
+        </div>
+    </div>
+
+    <!-- 使用 PeerJS 的免费信令服务 -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js">
+    </script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ---------- 牌组 ----------
+            const CARD_TYPES = ['Q', 'K', 'A', 'Joker'];
+            const CARD_COUNTS = { Q: 6, K: 6, A: 6, Joker: 2 };
+
+            // ---------- DOM ----------
+            const connStatus = document.getElementById('connStatus');
+            const roomInput = document.getElementById('roomInput');
+            const createBtn = document.getElementById('createBtn');
+            const joinBtn = document.getElementById('joinBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            const opponentHand = document.getElementById('opponentHand');
+            const myHand = document.getElementById('myHand');
+            const opponentLife = document.getElementById('opponentLife');
+            const myLife = document.getElementById('myLife');
+            const opponentCardCount = document.getElementById('opponentCardCount');
+            const myCardCount = document.getElementById('myCardCount');
+            const targetDisplay = document.getElementById('targetDisplay');
+            const messageBox = document.getElementById('messageBox');
+            const debugInfo = document.getElementById('debugInfo');
+            const playBtn = document.getElementById('playBtn');
+            const trustBtn = document.getElementById('trustBtn');
+            const doubtBtn = document.getElementById('doubtBtn');
+
+            // ---------- 游戏状态 ----------
+            let game = {
+                peer: null,
+                conn: null,
+                isHost: false,
+                roomId: '',
+                connected: false,
+
+                targetType: null,
+                myCards: [],
+                opponentCards: [],
+                myLife: 6,
+                opponentLife: 6,
+                myTurn: false,
+                gameOver: false,
+                selectedIndices: [],
+                phase: 'idle',
+                pendingPlay: null,
+                cardIdCounter: 0,
+                isProcessing: false,
+            };
+
+            // ---------- 工具 ----------
+            function shuffle(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+
+            function createDeck() {
+                const deck = [];
+                for (const type of CARD_TYPES) {
+                    for (let i = 0; i < CARD_COUNTS[type]; i++) {
+                        deck.push({ type, id: game.cardIdCounter++ });
+                    }
+                }
+                return shuffle(deck);
+            }
+
+            function getCardDisplay(type) {
+                return type === 'Joker' ? '🃏' : type;
+            }
+
+            // ---------- UI ----------
+            function updateUI() {
+                renderLife(opponentLife, game.opponentLife);
+                renderLife(myLife, game.myLife);
+                opponentCardCount.textContent = game.opponentCards.length + ' 张';
+                myCardCount.textContent = game.myCards.length + ' 张';
+
+                if (game.targetType) {
+                    targetDisplay.textContent = '🎯 目标: ' + getCardDisplay(game.targetType);
+                } else {
+                    targetDisplay.textContent = '🎯 目标: ?';
+                }
+
+                renderMyHand();
+                renderOpponentHand();
+                updateButtons();
+
+                if (game.connected) {
+                    connStatus.textContent = '🟢 已连接';
+                    connStatus.className = 'status-badge online';
+                } else {
+                    connStatus.textContent = '⚪ 未连接';
+                    connStatus.className = 'status-badge';
+                }
+            }
+
+            function renderLife(el, life) {
+                let html = '';
+                for (let i = 0; i < 6; i++) {
+                    html += `<span class="life-dot ${i < life ? 'active' : 'lost'}"></span>`;
+                }
+                el.innerHTML = html;
+            }
+
+            function renderMyHand() {
+                myHand.innerHTML = '';
+                game.myCards.forEach((card, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'card-slot';
+                    if (card.type === 'Joker') div.classList.add('joker');
+                    if (game.selectedIndices.includes(idx)) div.classList.add('selected');
+                    div.textContent = getCardDisplay(card.type);
+                    div.dataset.idx = idx;
+                    div.addEventListener('click', () => toggleSelect(idx));
+                    myHand.appendChild(div);
+                });
+                if (game.myCards.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'color:#4e5a78;font-size:0.8rem;padding:0.3rem 0;';
+                    empty.textContent = '🃏 无手牌';
+                    myHand.appendChild(empty);
+                }
+                playBtn.textContent = '🎴 打出 (' + game.selectedIndices.length + '张)';
+            }
+
+            function renderOpponentHand() {
+                opponentHand.innerHTML = '';
+                for (let i = 0; i < game.opponentCards.length && i < 10; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'card-slot facedown';
+                    div.textContent = '?';
+                    opponentHand.appendChild(div);
+                }
+                if (game.opponentCards.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'color:#4e5a78;font-size:0.8rem;padding:0.3rem 0;';
+                    empty.textContent = '🃏 无手牌';
+                    opponentHand.appendChild(empty);
+                }
+            }
+
+            function updateButtons() {
+                const isMyTurn = game.myTurn && !game.gameOver && game.connected;
+                const hasCards = game.myCards.length > 0;
+                const sel = game.selectedIndices.length;
+
+                playBtn.disabled = !(isMyTurn && hasCards && sel > 0 && sel <= 3 && game.phase === 'idle');
+                trustBtn.disabled = !(game.phase === 'waiting_judge' && game.connected && !game.gameOver);
+                doubtBtn.disabled = !(game.phase === 'waiting_judge' && game.connected && !game.gameOver);
+
+                createBtn.disabled = game.connected;
+                joinBtn.disabled = game.connected;
+            }
+
+            function setMessage(msg, type) {
+                messageBox.textContent = msg;
+                messageBox.className = 'message-box';
+                if (type === 'error') messageBox.classList.add('error');
+                else if (type === 'success') messageBox.classList.add('success');
+            }
+
+            // ---------- 选择牌 ----------
+            function toggleSelect(idx) {
+                if (!game.myTurn || game.phase !== 'idle' || game.gameOver) return;
+                const pos = game.selectedIndices.indexOf(idx);
+                if (pos >= 0) {
+                    game.selectedIndices.splice(pos, 1);
+                } else {
+                    if (game.selectedIndices.length >= 3) {
+                        setMessage('最多选择3张牌', 'error');
+                        return;
+                    }
+                    game.selectedIndices.push(idx);
+                }
+                renderMyHand();
+                updateButtons();
+            }
+
+            // ---------- 游戏逻辑 ----------
+            function initGame() {
+                const deck = createDeck();
+                const half = Math.floor(deck.length / 2);
+                game.myCards = deck.slice(0, half);
+                game.opponentCards = deck.slice(half);
+                game.myLife = 6;
+                game.opponentLife = 6;
+                game.myTurn = true;
+                game.gameOver = false;
+                game.phase = 'idle';
+                game.selectedIndices = [];
+                game.pendingPlay = null;
+
+                const types = ['Q', 'K', 'A', 'Joker'];
+                game.targetType = types[Math.floor(Math.random() * types.length)];
+
+                setMessage('🎯 目标: ' + getCardDisplay(game.targetType) + '  ·  你先出牌', 'success');
+                updateUI();
+            }
+
+            function sendToPeer(data) {
+                if (game.conn && game.conn.open) {
+                    game.conn.send(JSON.stringify(data));
+                } else {
+                    setMessage('⚠️ 连接未建立', 'error');
+                }
+            }
+
+            function playCards() {
+                if (game.gameOver || !game.myTurn || game.phase !== 'idle') return;
+                if (game.selectedIndices.length === 0 || game.selectedIndices.length > 3) {
+                    setMessage('请选择1-3张牌', 'error');
+                    return;
+                }
+
+                const selected = game.selectedIndices.map(i => game.myCards[i]);
+                const sorted = [...game.selectedIndices].sort((a, b) => b - a);
+                for (const idx of sorted) {
+                    game.myCards.splice(idx, 1);
+                }
+                game.selectedIndices = [];
+
+                const declared = game.targetType;
+                const allTarget = selected.every(c => c.type === game.targetType);
+
+                const playData = {
+                    cards: selected.map(c => c.type),
+                    declared: declared,
+                    allTarget: allTarget,
+                    count: selected.length,
+                };
+
+                sendToPeer({ type: 'play', data: playData });
+
+                game.phase = 'waiting_judge';
+                game.pendingPlay = playData;
+                game.myTurn = false;
+
+                setMessage('你打出 ' + selected.length + ' 张牌，声明为 ' + getCardDisplay(declared) + '，等待对手判断...', '');
+                updateUI();
+            }
+
+            function onOpponentPlay(data) {
+                if (game.gameOver) return;
+                game.phase = 'waiting_judge';
+                game.pendingPlay = data;
+                game.myTurn = false;
+
+                game.opponentCards = game.opponentCards.slice(0, game.opponentCards.length - data.count);
+
+                setMessage('🤔 对手打出 ' + data.count + ' 张牌，声明为 ' + getCardDisplay(data.declared) + '。相信还是质疑？', '');
+                updateUI();
+            }
+
+            function trust() {
+                if (game.phase !== 'waiting_judge' || !game.pendingPlay) return;
+                game.phase = 'idle';
+                sendToPeer({ type: 'trust_response', data: { trusted: true } });
+                setMessage('👍 你选择相信', 'success');
+                game.pendingPlay = null;
+                game.myTurn = false;
+                updateUI();
+                setMessage('等待对手出牌...', '');
+            }
+
+            function doubt() {
+                if (game.phase !== 'waiting_judge' || !game.pendingPlay) return;
+                const play = game.pendingPlay;
+                game.phase = 'idle';
+                const isLie = !play.allTarget;
+
+                sendToPeer({ type: 'doubt_response', data: { isLie: isLie } });
+
+                if (isLie) {
+                    game.opponentLife--;
+                    setMessage('🤨 质疑成功！对手撒谎了！对手挨了一枪 ❗', 'success');
+                } else {
+                    game.myLife--;
+                    setMessage('😰 质疑失败... 对手没有撒谎。你挨了一枪 💔', 'error');
+                }
+
+                game.pendingPlay = null;
+
+                if (game.myLife <= 0 || game.opponentLife <= 0) {
+                    game.gameOver = true;
+                    const winner = game.myLife <= 0 ? '对手' : '你';
+                    setMessage('🏆 游戏结束！' + winner + ' 获胜！', 'success');
+                    updateUI();
+                    return;
+                }
+
+                game.myTurn = false;
+                updateUI();
+                setMessage('等待对手出牌...', '');
+            }
+
+            function onJudgeResponse(data) {
+                if (game.gameOver) return;
+                game.phase = 'idle';
+
+                if (data.trusted) {
+                    setMessage('对手选择相信', 'success');
+                    game.myTurn = false;
+                } else {
+                    const isLie = data.isLie;
+                    if (isLie) {
+                        game.myLife--;
+                        setMessage('🤨 对手质疑成功！你撒谎了！你挨了一枪 ❗', 'error');
+                    } else {
+                        game.opponentLife--;
+                        setMessage('😰 对手质疑失败！你没有撒谎。对手挨了一枪 💔', 'success');
+                    }
+                    if (game.myLife <= 0 || game.opponentLife <= 0) {
+                        game.gameOver = true;
+                        const winner = game.myLife <= 0 ? '对手' : '你';
+                        setMessage('🏆 游戏结束！' + winner + ' 获胜！', 'success');
+                        updateUI();
+                        return;
+                    }
+                    game.myTurn = false;
+                }
+
+                game.pendingPlay = null;
+                updateUI();
+                setMessage('等待对手出牌...', '');
+            }
+
+            // ---------- PeerJS 连接 ----------
+            function createRoom() {
+                const room = roomInput.value.trim() || 'liar666';
+                game.roomId = room;
+                game.isHost = true;
+
+                if (game.peer) {
+                    try { game.peer.destroy(); } catch (e) {}
+                }
+
+                const peer = new Peer(room, {
+                    debug: 2,
+                });
+
+                peer.on('open', (id) => {
+                    setMessage('🏠 房间创建成功，等待对手加入...', 'success');
+                    game.peer = peer;
+                    game.connected = true;
+                    updateUI();
+                });
+
+                peer.on('connection', (conn) => {
+                    game.conn = conn;
+                    game.connected = true;
+                    game.isHost = true;
+
+                    conn.on('open', () => {
+                        setMessage('🔗 对手已连接！', 'success');
+                        initGame();
+                        // 发送初始化数据给客户端
+                        sendToPeer({
+                            type: 'init',
+                            data: {
+                                targetType: game.targetType,
+                                myCards: game.opponentCards,
+                                opponentCards: game.myCards,
+                                myLife: 6,
+                                opponentLife: 6,
+                                myTurn: false,
+                            }
+                        });
+                        updateUI();
+                    });
+
+                    conn.on('data', (data) => {
+                        handleGameMessage(JSON.parse(data));
+                    });
+
+                    conn.on('close', () => {
+                        game.connected = false;
+                        setMessage('🔌 对手断开连接', 'error');
+                        updateUI();
+                    });
+                });
+
+                peer.on('error', (err) => {
+                    if (err.type === 'unavailable-id') {
+                        setMessage('❌ 房间已被占用，请换一个房间号', 'error');
+                    } else {
+                        setMessage('❌ 错误: ' + err.message, 'error');
+                    }
+                    game.connected = false;
+                    updateUI();
+                });
+
+                game.peer = peer;
+            }
+
+            function joinRoom() {
+                const room = roomInput.value.trim() || 'liar666';
+                game.roomId = room;
+                game.isHost = false;
+
+                if (game.peer) {
+                    try { game.peer.destroy(); } catch (e) {}
+                }
+
+                // 客户端使用随机ID
+                const clientId = 'client_' + Math.random().toString(36).substr(2, 6);
+                const peer = new Peer(clientId, {
+                    debug: 2,
+                });
+
+                peer.on('open', (id) => {
+                    setMessage('🔗 正在连接房间...', '');
+                    const conn = peer.connect(room);
+                    conn.on('open', () => {
+                        game.conn = conn;
+                        game.connected = true;
+                        game.peer = peer;
+                        setMessage('🔗 已加入房间！', 'success');
+                        updateUI();
+                    });
+
+                    conn.on('data', (data) => {
+                        handleGameMessage(JSON.parse(data));
+                    });
+
+                    conn.on('close', () => {
+                        game.connected = false;
+                        setMessage('🔌 连接已断开', 'error');
+                        updateUI();
+                    });
+
+                    game.conn = conn;
+                });
+
+                peer.on('error', (err) => {
+                    if (err.type === 'peer-unavailable') {
+                        setMessage('❌ 房间不存在，请检查房间号', 'error');
+                    } else {
+                        setMessage('❌ 错误: ' + err.message, 'error');
+                    }
+                    game.connected = false;
+                    updateUI();
+                });
+
+                game.peer = peer;
+            }
+
+            function disconnect() {
+                if (game.conn) {
+                    try { game.conn.close(); } catch (e) {}
+                }
+                if (game.peer) {
+                    try { game.peer.destroy(); } catch (e) {}
+                }
+                game.connected = false;
+                game.conn = null;
+                game.peer = null;
+                setMessage('🔌 已断开连接', 'error');
+                updateUI();
+            }
+
+            // ---------- 处理游戏消息 ----------
+            function handleGameMessage(data) {
+                if (data.type === 'init') {
+                    game.targetType = data.data.targetType;
+                    game.myCards = data.data.myCards;
+                    game.opponentCards = data.data.opponentCards;
+                    game.myLife = data.data.myLife;
+                    game.opponentLife = data.data.opponentLife;
+                    game.myTurn = data.data.myTurn;
+                    game.gameOver = false;
+                    game.phase = 'idle';
+                    game.selectedIndices = [];
+                    setMessage('🃏 游戏开始！' + (game.myTurn ? '你先出牌' : '等待对手出牌'), 'success');
+                    updateUI();
+                } else if (data.type === 'play') {
+                    onOpponentPlay(data.data);
+                } else if (data.type === 'trust_response') {
+                    onJudgeResponse({ trusted: true });
+                } else if (data.type === 'doubt_response') {
+                    onJudgeResponse({ trusted: false, isLie: data.data.isLie });
+                }
+            }
+
+            // ---------- 事件绑定 ----------
+            createBtn.addEventListener('click', createRoom);
+            joinBtn.addEventListener('click', joinRoom);
+            disconnectBtn.addEventListener('click', disconnect);
+            playBtn.addEventListener('click', playCards);
+            trustBtn.addEventListener('click', trust);
+            doubtBtn.addEventListener('click', doubt);
+
+            // ---------- 初始化 ----------
+            setMessage('💡 创建或加入房间开始游戏', '');
+            updateUI();
+
+            console.log('🔫 骗子酒馆 · 局域网双人版 (PeerJS)');
+            console.log('使用 PeerJS 免费信令服务');
+
+            // 暴露一些变量方便调试
+            window.__game = game;
+
+        })();
+    </script>
+
+</body>
+</html>
